@@ -1,17 +1,16 @@
 import React from "react";
 import {Route, BrowserRouter as Router, Switch} from "react-router-dom";
-import { createBrowserHistory } from 'history';
 import App from "./App";
-import ListServices from "./ListServices";
+import ServiceTable from "./Components/Services/ServicesTable";
 
 function AppRouter() {
-  return <Router history={createBrowserHistory()}>
+  return <Router>
     <Switch>
-      <Route path={"/"}>
+      <Route exact={true} path={"/"}>
         <App/>
       </Route>
-      <Route path={"/services/list"}>
-        <ListServices/>
+      <Route path={"/services"}>
+        <ServiceTable/>
       </Route>
     </Switch>
   </Router>
