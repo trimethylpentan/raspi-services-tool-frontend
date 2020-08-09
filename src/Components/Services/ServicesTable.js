@@ -1,11 +1,36 @@
 import React, {useEffect, useState} from "react";
+import TableRow from "./TableRow";
+import Modal from "../Modal";
 
 function ServiceTable() {
   const [services, setServices] = useState([]);
+  const [clickedService, setClickedService] = useState('');
   const [error, setError] = useState('');
+  const [openModal, setOpenModal] = useState(false);
 
-  const startService = (serviceName) => {
-    //TODO: Implement API-Request
+  const openPasswordModal = (clickedService) => {
+    setClickedService(clickedService);
+    setOpenModal(true);
+  }
+
+  const startService = (serviceName, password) => {
+    setOpenModal(false);
+    fetch('http://testing.raspi-services-tools.local/api/services/start', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        "service-name": serviceName,
+        "password": password
+      }),
+    })
+      .then((result) => result.json())
+      .then((data) => {
+        const oldState = [...services];
+        setServices(oldState.map((service) => service['service-name'] === serviceName ? data.service : service));
+      })
+      .catch((error) => alert(error))
   }
 
   const restartService = (serviceName) => {
@@ -25,47 +50,20 @@ function ServiceTable() {
 
   return <div>
     {error !== '' &&  <div className="alert alert-danger" role="alert">{error}</div>}
+    {openModal && <Modal serviceName={clickedService} closeModal={() => setOpenModal(false)} send={startService}/>}
     <table className={'table table-dark'}>
-      <tr>
-        <th>Service-Name</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
+      <thead>
+        <tr>
+          <th>Service-Name</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
       <tbody>
-        {renderTableRows(services)}
+      {services.map((service) => <TableRow key={service['service-name'] + 'row'} startService={openPasswordModal} service={service}/>)}
       </tbody>
     </table>
   </div>
-}
-
-function renderTableRows(services) {
-  return services.map((service) => {
-    let className = '';
-    switch (service.status) {
-      case 'running':
-        className = 'text-success';
-        break;
-      case 'stopped':
-        className = 'text-danger';
-        break;
-      case 'unknown':
-        className = 'text-warning';
-        break;
-      default:
-          className = '';
-    }
-
-    return <tr key={service['service-name']}>
-      <td title={service.description}>{service['service-name']}</td>
-      <td className={className}>{service.status}</td>
-      <td>
-        {service.status === 'running' &&
-        <button type={'button'} className={'mr-1 btn btn-warning'}>Restart</button>} {service.status === 'running' &&
-      <button type={'button'} className={'btn btn-danger'}>Stop</button>} {service.status === 'stopped' &&
-      <button type={'button'} className={'btn btn-success'}>Start</button>}
-      </td>
-    </tr>
-  });
 }
 
 export default ServiceTable;
