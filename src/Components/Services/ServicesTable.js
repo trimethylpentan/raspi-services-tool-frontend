@@ -44,6 +44,10 @@ function ServiceTable() {
       .then((result) => result.json())
       .then((data) => {
         const oldState = [...services];
+        if (data.errors) {
+          setError(data.errors);
+          return;
+        }
         setServices(oldState.map((service) => service['service-name'] === serviceName ? data.service : service));
       })
       .catch((error) => setError(error))
