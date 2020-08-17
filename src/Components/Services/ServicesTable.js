@@ -8,6 +8,8 @@ function ServiceTable() {
   const [error, setError] = useState('');
   const [openModal, setOpenModal] = useState(false);
   const [sendMethod, setSendMethod] = useState('');
+  const [filter, setFilter] = useState('');
+  const [orderBy, setOrderBy] = useState({orderBy: '', isAscending: true})
 
   const openPasswordModal = (clickedService) => {
     setClickedService(clickedService);
@@ -53,6 +55,37 @@ function ServiceTable() {
       .catch((error) => setError(error))
   }
 
+  const changeOrderBy = (orderByColumn) => {
+    let isAscending = true;
+    if (orderByColumn === orderBy.orderBy) {
+      isAscending = !orderBy.isAscending;
+    }
+
+    setOrderBy({orderBy: orderByColumn, isAscending});
+  }
+
+  const renderTableRows = () => {
+    return services.filter((service) => service['service-name'].includes(filter) || service.description.includes(filter) || service.status.includes(filter))
+      .sort((service1, service2) => {
+        let bigger = 1;
+        let smaller = -1;
+        if (orderBy.isAscending) {
+          bigger = -1;
+          smaller = 1;
+        }
+        if (orderBy.orderBy === 'service-name') {
+          return service1['service-name'].toLowerCase() < service2['service-name'].toLowerCase() ? smaller : bigger;
+        }
+        if (orderBy.orderBy === 'status') {
+          return service1.status < service2.status ? smaller : bigger;
+        }
+
+        return -1;
+      })
+      .map((service) =>
+        <TableRow key={service['service-name'] + 'row'} startService={startService} stopService={stopService} restartService={restartService} service={service}/>)
+  }
+
   useEffect(() => {
     fetch('http://testing.raspi-services-tools.local/api/services/list')
       .then(result => result.json())
@@ -60,24 +93,24 @@ function ServiceTable() {
       .catch((error) => setError('Could not connect to API! ' + error));
   }, [])
 
-  return <div>
+  return <div className="bg-dark">
     {error !== '' &&  <div className="alert alert-danger" role="alert">{error}</div>}
     {openModal && <Modal serviceName={clickedService} closeModal={() => setOpenModal(false)} send={changeServiceStatus}/>}
+    <div className="row-cols-6 mt-1 mb-1">
+      <div className="col-3">
+        <input type="text" placeholder={'Filter process list'} onChange={(event) => setFilter(event.target.value)}/>
+      </div>
+    </div>
     <table className={'table table-dark'}>
       <thead>
         <tr>
-          <th>Service-Name</th>
-          <th>Status</th>
+          <th style={{cursor: 'pointer'}} onClick={() => changeOrderBy('service-name')}>Service-Name</th>
+          <th style={{cursor: 'pointer'}} onClick={() => changeOrderBy('status')}>Status</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-      {services.map((service) => <TableRow
-        key={service['service-name'] + 'row'}
-        startService={startService}
-        stopService={stopService}
-        restartService={restartService}
-        service={service}/>)}
+      {renderTableRows()}
       </tbody>
     </table>
   </div>
