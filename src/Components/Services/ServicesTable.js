@@ -1,6 +1,7 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import TableRow from "./TableRow";
 import Modal from "../Modal";
+import Credentials from "../../Context/Credentials";
 
 function ServiceTable() {
   const [services, setServices] = useState([]);
@@ -10,6 +11,8 @@ function ServiceTable() {
   const [sendMethod, setSendMethod] = useState('');
   const [filter, setFilter] = useState('');
   const [orderBy, setOrderBy] = useState({orderBy: '', isAscending: true})
+
+  const credentials = useContext(Credentials);
 
   const openPasswordModal = (clickedService) => {
     setClickedService(clickedService);
@@ -87,11 +90,22 @@ function ServiceTable() {
   }
 
   useEffect(() => {
-    fetch('http://testing.raspi-services-tools.local/api/services/list')
+    if (credentials === null) {
+      setError('Not logged in!');
+      return;
+    }
+
+    fetch('http://testing.raspi-services-tools.local/api/services/list', {
+      method: 'GET',
+      headers: {
+        "API-Key": credentials,
+        Accept: 'application/json',
+      }
+    })
       .then(result => result.json())
       .then((data) => setServices(data.services))
       .catch((error) => setError('Could not connect to API! ' + error));
-  }, [])
+  }, [credentials])
 
   return <div className="bg-dark">
     {error !== '' &&  <div className="alert alert-danger" role="alert">{error}</div>}
