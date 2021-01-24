@@ -2,6 +2,7 @@ import React, {useContext, useEffect, useState} from "react";
 import TableRow from "./TableRow";
 import Modal from "../Modal";
 import Credentials from "../../Context/Credentials";
+import {Redirect} from "react-router";
 
 function ServiceTable() {
   const [services, setServices] = useState([]);
@@ -105,7 +106,11 @@ function ServiceTable() {
       .then(result => result.json())
       .then((data) => setServices(data.services))
       .catch((error) => setError('Could not connect to API! ' + error));
-  }, [credentials])
+  }, [credentials]);
+
+  if (credentials === null) {
+    return <Redirect to={'/login'}/>;
+  }
 
   return <div className="bg-dark">
     {error !== '' &&  <div className="alert alert-danger" role="alert">{error}</div>}

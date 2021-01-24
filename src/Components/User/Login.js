@@ -1,5 +1,6 @@
 import React, {useState} from "react";
 import cookie from "cookie";
+import {Redirect} from "react-router";
 
 function Login(props) {
   const [isLoggedIn, setLoggedIn] = useState(false);
@@ -23,7 +24,7 @@ function Login(props) {
     })
       .then((result) => result.json())
       .then((jsonResult) => {
-        console.log(jsonResult);
+        // Save the access token in a context and a cookie
         props.setCredentials(jsonResult.token);
         document.cookie = cookie.serialize('token', jsonResult.token);
         setLoggedIn(true);
@@ -33,7 +34,7 @@ function Login(props) {
   }
 
   if (isLoggedIn) {
-    //TODO: Redirect
+    return <Redirect to={'/'}/>
   }
 
   return <div className={'row col-12'}>
